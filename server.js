@@ -6,38 +6,61 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Serve static HTML files from "public" directory
+// Serve static UI files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Sensor data storage
-let drainageStatus = {
+// Initialize 5 Drainage Status Objects
+const initialDrainState = () => ({
   gasPPM: 0,
   waterLevelCM: 0,
   flowRateLPM: 0,
   isRaining: false,
-  lastUpdated: "Waiting for data..."
+  status: "Normal", // Normal, Alert, Critical
+  lastUpdated: "Never"
+});
+
+let systemData = {
+  "D1": { name: "Main Avenue Drain", ...initialDrainState() },
+  "D2": { name: "Market Street Drain", ...initialDrainState() },
+  "D3": { name: "Community Center Drain", ...initialDrainState() },
+  "D4": { name: "Industrial Park Drain", ...initialDrainState() },
+  "D5": { name: "Residential Alley Drain", ...initialDrainState() }
 };
 
-// Endpoint for ESP32/Postman data updates
+// --- API Endpoint: Update Sensor Data ---
+// Expects: { drainageId: "D1", gas: 50, level: 10, flow: 12, rain: false }
 app.post('/api/update', (req, res) => {
-  const { gas, level, flow, rain } = req.body;
+  const { drainageId, gas, level, flow, rain } = req.body;
 
-  drainageStatus = {
-    gasPPM: gas || 0,
-    waterLevelCM: level || 0,
-    flowRateLPM: flow || 0,
-    isRaining: rain ?? false,
+  // Validate drainageId
+  if (!drainageId || !systemData[drainageId]) {
+    return res.status(400).json({ success: false, message: "Invalid or missing drainageId" });
+  }
+
+  // Calculate status (optional, adds simple logic)
+  let status = "Normal";
+  if (gas > 200 || level > 20) status = "Alert ⚠️";
+  if (gas > 500 || level > 40) status = "Critical 🚨";
+
+  // Update specific drainage data
+  systemData[drainageId] = {
+    ...systemData[drainageId], // keep name
+    gasPPM: gas ?? systemData[drainageId].gasPPM,
+    waterLevelCM: level ?? systemData[drainageId].waterLevelCM,
+    flowRateLPM: flow ?? systemData[drainageId].flowRateLPM,
+    isRaining: rain ?? systemData[drainageId].isRaining,
+    status: status,
     lastUpdated: new Date().toLocaleTimeString()
   };
 
-  console.log("Data Received:", drainageStatus);
-  res.json({ success: true, message: "Data updated successfully!" });
+  console.log(`Updated ${drainageId}:`, systemData[drainageId]);
+  res.json({ success: true, message: `${drainageId} updated.` });
 });
 
-// Endpoint for web interface to fetch live data
+// --- API Endpoint: Fetch All Live Data ---
 app.get('/api/live', (req, res) => {
-  res.json(drainageStatus);
+  res.json(systemData);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Multi-Drain Server running at http://localhost:${PORT}`));
