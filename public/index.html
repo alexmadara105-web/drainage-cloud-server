@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Drainage Network Dashboard</title>
+    <title>Multi-Drainage Monitoring Dashboard</title>
     <style>
         :root {
             --bg-color: #0b1121;
@@ -13,9 +13,9 @@
             --text-muted: #94a3b8;
             --accent-blue: #38bdf8;
             --sensor-gas: #fb923c;   /* MQ Sensor Orange */
-            --sensor-level: #a78bfa; /* Ultrasonic Level Purple */
+            --sensor-level: #a78bfa; /* Ultrasonic Sensor Purple */
             --sensor-flow: #4ade80;  /* Flow Sensor Green */
-            --sensor-rain: #2dd4bf;  /* Raindrop Sensor Cyan */
+            --sensor-rain: #2dd4bf;  /* Rain Sensor Cyan */
             --status-normal: #10b981;
             --status-alert: #f59e0b;
             --status-critical: #ef4444;
@@ -46,7 +46,6 @@
         h1 { margin: 0; font-size: 1.8rem; color: var(--accent-blue); }
         .system-status { font-size: 0.9rem; color: var(--text-muted); }
 
-        /* The main 5-column grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -55,7 +54,6 @@
             max-width: 1300px;
         }
 
-        /* Responsive grid adjustment */
         @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 700px) { .dashboard-grid { grid-template-columns: repeat(1, 1fr); } }
 
@@ -91,9 +89,8 @@
         }
 
         .drain-name { font-size: 1.1rem; font-weight: 600; }
-        .overall-status { font-size: 0.85rem; color: var(--status-normal); font-weight: 600; margin-top: 2px;}
+        .overall-status { font-size: 0.85rem; color: var(--status-normal); font-weight: 600; margin-top: 2px; }
 
-        /* Sensor Row Styling */
         .sensor-row {
             display: flex;
             align-items: center;
@@ -105,12 +102,10 @@
         }
 
         .sensor-info { display: flex; align-items: center; gap: 8px; }
-        
         .icon { font-size: 1.2rem; width: 24px; text-align: center; }
         .sensor-label { font-size: 0.8rem; color: var(--text-muted); }
         .sensor-value { font-size: 1.1rem; font-weight: bold; }
 
-        /* Icon & Color Mapping for each sensor type */
         .sensor-gas .icon, .sensor-gas .sensor-value     { color: var(--sensor-gas); }
         .sensor-level .icon, .sensor-level .sensor-value { color: var(--sensor-level); }
         .sensor-flow .icon, .sensor-flow .sensor-value   { color: var(--sensor-flow); }
@@ -132,15 +127,15 @@
 </header>
 
 <div class="dashboard-grid" id="mainGrid">
-    <!-- The JavaScript will build the 5 cards here -->
+    <!-- Built dynamically via JavaScript -->
 </div>
 
 <script>
     const sensorIcons = {
-        gas: "🤢",    // MQ Gas Sensor (representing odor/toxicity)
-        level: "📏",  // Ultrasonic Sensor (representing depth/measurement)
-        flow: "💧",   // Flow Sensor (representing movement)
-        rain: "🌧️"    // Raindrop Sensor (representing weather)
+        gas: "🤢",
+        level: "📏",
+        flow: "💧",
+        rain: "🌧️"
     };
 
     function updateOverallStatusStyle(element, status) {
@@ -157,13 +152,11 @@
             sysLog.innerText = `Network Status: Operational | Last Sync: ${new Date().toLocaleTimeString()}`;
 
             const grid = document.getElementById('mainGrid');
-            grid.innerHTML = ''; // Clear and rebuild cards each sync
+            grid.innerHTML = '';
 
-            // Iterate through the 5 drainage objects
             Object.keys(systemData).forEach(id => {
                 const data = systemData[id];
                 
-                // Build the Card HTML structure
                 const card = `
                 <div class="drain-card">
                     <div class="drain-id">${id}</div>
@@ -172,25 +165,22 @@
                         <div class="overall-status" id="status-${id}">${data.status}</div>
                     </div>
 
-                    <!-- MQ Gas Sensor -->
                     <div class="sensor-row sensor-gas">
                         <div class="sensor-info">
                             <span class="icon">${sensorIcons.gas}</span>
-                            <span class="sensor-label">Gas Level</span>
+                            <span class="sensor-label">Gas Level (MQ)</span>
                         </div>
                         <div class="sensor-value">${data.gasPPM} PPM</div>
                     </div>
 
-                    <!-- Ultrasonic Depth Sensor -->
                     <div class="sensor-row sensor-level">
                         <div class="sensor-info">
                             <span class="icon">${sensorIcons.level}</span>
-                            <span class="sensor-label">Drain Depth</span>
+                            <span class="sensor-label">Drain Depth (Ultrasonic)</span>
                         </div>
                         <div class="sensor-value">${data.waterLevelCM} CM</div>
                     </div>
 
-                    <!-- Flow Sensor -->
                     <div class="sensor-row sensor-flow">
                         <div class="sensor-info">
                             <span class="icon">${sensorIcons.flow}</span>
@@ -199,7 +189,6 @@
                         <div class="sensor-value">${data.flowRateLPM} L/m</div>
                     </div>
 
-                    <!-- Rain Sensor -->
                     <div class="sensor-row sensor-rain">
                         <div class="sensor-info">
                             <span class="icon">${sensorIcons.rain}</span>
@@ -214,7 +203,6 @@
                 
                 grid.innerHTML += card;
                 
-                // Set initial status color immediately
                 setTimeout(() => {
                   updateOverallStatusStyle(document.getElementById(`status-${id}`), data.status);
                 }, 50);
@@ -226,9 +214,8 @@
         }
     }
 
-    // Run sync every 2 seconds
     setInterval(fetchData, 2000);
-    fetchData(); // Run once immediately
+    fetchData();
 </script>
 
 </body>

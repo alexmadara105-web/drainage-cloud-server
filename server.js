@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Serve static UI files
+// Serve static dashboard UI
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize 5 Drainage Status Objects
@@ -15,7 +15,7 @@ const initialDrainState = () => ({
   waterLevelCM: 0,
   flowRateLPM: 0,
   isRaining: false,
-  status: "Normal", // Normal, Alert, Critical
+  status: "Normal",
   lastUpdated: "Never"
 });
 
@@ -27,24 +27,21 @@ let systemData = {
   "D5": { name: "Residential Alley Drain", ...initialDrainState() }
 };
 
-// --- API Endpoint: Update Sensor Data ---
-// Expects: { drainageId: "D1", gas: 50, level: 10, flow: 12, rain: false }
+// Update Endpoint for ESP32 / Test inputs
 app.post('/api/update', (req, res) => {
   const { drainageId, gas, level, flow, rain } = req.body;
 
-  // Validate drainageId
   if (!drainageId || !systemData[drainageId]) {
     return res.status(400).json({ success: false, message: "Invalid or missing drainageId" });
   }
 
-  // Calculate status (optional, adds simple logic)
+  // Automatic status calculation
   let status = "Normal";
   if (gas > 200 || level > 20) status = "Alert ⚠️";
   if (gas > 500 || level > 40) status = "Critical 🚨";
 
-  // Update specific drainage data
   systemData[drainageId] = {
-    ...systemData[drainageId], // keep name
+    ...systemData[drainageId],
     gasPPM: gas ?? systemData[drainageId].gasPPM,
     waterLevelCM: level ?? systemData[drainageId].waterLevelCM,
     flowRateLPM: flow ?? systemData[drainageId].flowRateLPM,
@@ -54,13 +51,13 @@ app.post('/api/update', (req, res) => {
   };
 
   console.log(`Updated ${drainageId}:`, systemData[drainageId]);
-  res.json({ success: true, message: `${drainageId} updated.` });
+  res.json({ success: true, message: `${drainageId} updated successfully.` });
 });
 
-// --- API Endpoint: Fetch All Live Data ---
+// Endpoint to fetch live status
 app.get('/api/live', (req, res) => {
   res.json(systemData);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Multi-Drain Server running at http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Multi-Drainage Server running on port ${PORT}`));
