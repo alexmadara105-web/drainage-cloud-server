@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Drainage Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; padding: 20px; text-align: center; }
+    h1 { color: #38bdf8; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 900px; margin: 30px auto; }
+    .card { background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155; }
+    .val { font-size: 2rem; color: #facc15; font-weight: bold; margin-top: 10px; }
+    .footer { color: #94a3b8; font-size: 0.9rem; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Drainage Live Monitoring System</h1>
+  <div class="grid">
+    <div class="card"><div>Gas Level</div><div class="val" id="gas">0 PPM</div></div>
+    <div class="card"><div>Water Level</div><div class="val" id="level">0 CM</div></div>
+    <div class="card"><div>Flow Rate</div><div class="val" id="flow">0 L/min</div></div>
+    <div class="card"><div>Rain Status</div><div class="val" id="rain">Clear</div></div>
+  </div>
+  <div class="footer" id="time">Connecting to server...</div>
+
+  <script>
+    async function updateDashboard() {
+      try {
+        const res = await fetch('/api/live');
+        const data = await res.json();
+        document.getElementById('gas').innerText = data.gasPPM + ' PPM';
+        document.getElementById('level').innerText = data.waterLevelCM + ' CM';
+        document.getElementById('flow').innerText = data.flowRateLPM + ' L/min';
+        document.getElementById('rain').innerText = data.isRaining ? 'Raining 🌧️' : 'Dry ☀️';
+        document.getElementById('time').innerText = 'Last updated: ' + data.lastUpdated;
+      } catch (err) { console.error(err); }
+    }
+    setInterval(updateDashboard, 2000);
+    updateDashboard();
+  </script>
+</body>
+</html>
