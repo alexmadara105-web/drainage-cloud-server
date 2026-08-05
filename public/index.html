@@ -3,219 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Drainage Monitoring Dashboard</title>
+    <title>Greater Chennai Corporation | Smart Drainage SCADA Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0b1121;
-            --card-bg: #111a31;
-            --card-border: #1e293b;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --accent-blue: #38bdf8;
-            --sensor-gas: #fb923c;   /* MQ Sensor Orange */
-            --sensor-level: #a78bfa; /* Ultrasonic Sensor Purple */
-            --sensor-flow: #4ade80;  /* Flow Sensor Green */
-            --sensor-rain: #2dd4bf;  /* Rain Sensor Cyan */
+            --bg-dark: #080d1a;
+            --panel-bg: #0f172a;
+            --panel-border: #1e293b;
+            --accent-gov: #0284c7;
+            --accent-cyan: #06b6d4;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
             --status-normal: #10b981;
-            --status-alert: #f59e0b;
+            --status-warning: #f59e0b;
             --status-critical: #ef4444;
+            --status-offline: #64748b;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
         }
 
-        header {
-            width: 100%;
-            max-width: 1300px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 15px;
+        /* --- LOGIN SCREEN OVERLAY --- */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
         }
 
-        h1 { margin: 0; font-size: 1.8rem; color: var(--accent-blue); }
-        .system-status { font-size: 0.9rem; color: var(--text-muted); }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-            width: 100%;
-            max-width: 1300px;
-        }
-
-        @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 700px) { .dashboard-grid { grid-template-columns: repeat(1, 1fr); } }
-
-        .drain-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
+        .login-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(56, 189, 248, 0.2);
             border-radius: 12px;
-            padding: 20px;
+            padding: 40px;
+            width: 100%; max-width: 440px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            text-align: center;
+        }
+
+        .gov-seal {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; box-shadow: 0 0 20px rgba(2, 132, 199, 0.4);
+        }
+
+        .login-card h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .login-card h3 { font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; margin-bottom: 25px; text-transform: uppercase; }
+
+        .form-group { text-align: left; margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px 14px; background: #020617;
+            border: 1px solid var(--panel-border); border-radius: 6px;
+            color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;
+        }
+        .form-group input:focus { border-color: var(--accent-gov); box-shadow: 0 0 8px rgba(2, 132, 199, 0.3); }
+
+        .btn-login {
+            width: 100%; padding: 14px; background: linear-gradient(90deg, #0284c7, #0369a1);
+            border: none; border-radius: 6px; color: #fff; font-weight: 700;
+            font-size: 0.95rem; cursor: pointer; transition: 0.2s; margin-top: 10px;
+        }
+        .btn-login:hover { background: linear-gradient(90deg, #0369a1, #075985); }
+
+        /* --- DASHBOARD HEADER --- */
+        header {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--panel-border);
+            padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .header-logo { font-size: 1.8rem; }
+        .header-title h1 { font-size: 1.2rem; font-weight: 800; letter-spacing: 0.5px; }
+        .header-title p { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+        .control-bar { display: flex; align-items: center; gap: 20px; }
+        .select-box {
+            background: #020617; border: 1px solid var(--panel-border);
+            color: var(--text-primary); padding: 8px 14px; border-radius: 6px;
+            font-size: 0.85rem; outline: none; cursor: pointer;
+        }
+
+        .officer-badge {
+            background: rgba(2, 132, 199, 0.15); border: 1px solid rgba(2, 132, 199, 0.3);
+            padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-cyan);
+            display: flex; align-items: center; gap: 8px; font-weight: 600;
+        }
+
+        /* --- MAIN DASHBOARD LAYOUT --- */
+        main { max-width: 1450px; margin: 30px auto; padding: 0 20px; }
+
+        .system-ticker {
+            background: #020617; border: 1px solid var(--panel-border);
+            border-left: 4px solid var(--accent-gov);
+            padding: 12px 20px; border-radius: 6px; margin-bottom: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 25px;
+        }
+
+        .node-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 22px;
             position: relative;
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .drain-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        .node-card.offline { opacity: 0.6; border-style: dashed; }
+
+        .node-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 12px; margin-bottom: 18px;
         }
 
-        .card-header {
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+        .node-code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            background: rgba(56, 189, 248, 0.1); color: var(--accent-cyan);
+            padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2);
+            display: inline-block; margin-bottom: 4px;
         }
 
-        .drain-id {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 0.75rem;
-            background: rgba(56, 189, 248, 0.1);
-            color: var(--accent-blue);
-            padding: 2px 6px;
-            border-radius: 4px;
+        .node-title { font-size: 1.05rem; font-weight: 700; color: #fff; }
+        .node-zone { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
+
+        .status-pill {
+            padding: 4px 10px; border-radius: 12px; font-size: 0.72rem;
+            font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
         }
 
-        .drain-name { font-size: 1.1rem; font-weight: 600; }
-        .overall-status { font-size: 0.85rem; color: var(--status-normal); font-weight: 600; margin-top: 2px; }
+        .status-NORMAL { background: rgba(16, 185, 129, 0.15); color: var(--status-normal); border: 1px solid var(--status-normal); }
+        .status-WARNING { background: rgba(245, 158, 11, 0.15); color: var(--status-warning); border: 1px solid var(--status-warning); }
+        .status-CRITICAL { background: rgba(239, 68, 68, 0.15); color: var(--status-critical); border: 1px solid var(--status-critical); }
+        .status-OFFLINE { background: rgba(100, 116, 139, 0.15); color: var(--status-offline); border: 1px solid var(--status-offline); }
 
-        .sensor-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            background: rgba(0,0,0,0.2);
-            padding: 8px;
-            border-radius: 6px;
+        /* TELEMETRY METRICS GRID */
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+
+        .metric-box {
+            background: #020617; border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px; padding: 12px;
         }
 
-        .sensor-info { display: flex; align-items: center; gap: 8px; }
-        .icon { font-size: 1.2rem; width: 24px; text-align: center; }
-        .sensor-label { font-size: 0.8rem; color: var(--text-muted); }
-        .sensor-value { font-size: 1.1rem; font-weight: bold; }
+        .metric-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+        .metric-value { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; color: #fff; }
+        .metric-unit { font-size: 0.75rem; color: var(--text-secondary); font-weight: 400; }
 
-        .sensor-gas .icon, .sensor-gas .sensor-value     { color: var(--sensor-gas); }
-        .sensor-level .icon, .sensor-level .sensor-value { color: var(--sensor-level); }
-        .sensor-flow .icon, .sensor-flow .sensor-value   { color: var(--sensor-flow); }
-        .sensor-rain .icon, .sensor-rain .sensor-value   { color: var(--sensor-rain); }
-
-        .updated-time {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-align: right;
-            margin-top: 15px;
+        .location-footer {
+            font-size: 0.72rem; color: var(--text-secondary);
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 1px solid var(--panel-border); pt: 10px; margin-top: 10px; padding-top: 10px;
         }
+
+        .standby-msg {
+            text-align: center; padding: 35px 20px; color: var(--text-secondary);
+        }
+        .standby-msg h4 { font-size: 0.95rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; }
+        .standby-msg p { font-size: 0.78rem; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Multi-Drain Network Monitor</h1>
-    <div class="system-status" id="sysLog">Connecting...</div>
-</header>
-
-<div class="dashboard-grid" id="mainGrid">
-    <!-- Built dynamically via JavaScript -->
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+    <div class="login-card">
+        <div class="gov-seal">🏛️</div>
+        <h2>GREATER CHENNAI CORPORATION</h2>
+        <h3>Smart Stormwater & SCADA Portal</h3>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Municipal Jurisdiction District</label>
+                <select id="loginDistrict" required>
+                    <option value="Chennai">Chennai District (GCC)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Administrative Officer ID</label>
+                <input type="text" value="GCC-OFFICER-2026" required>
+            </div>
+            <div class="form-group">
+                <label>Security Authorization Key</label>
+                <input type="password" value="••••••••" required>
+            </div>
+            <button type="submit" class="btn-login">AUTHENTICATE & ACCESS SCADA</button>
+        </form>
+    </div>
 </div>
 
-<script>
-    const sensorIcons = {
-        gas: "🤢",
-        level: "📏",
-        flow: "💧",
-        rain: "🌧️"
-    };
+<!-- MAIN DASHBOARD -->
+<header>
+    <div class="header-brand">
+        <div class="header-logo">🏛️</div>
+        <div class="header-title">
+            <h1>GREATER CHENNAI CORPORATION</h1>
+            <p>Integrated Urban Flood Management SCADA Command Center</p>
+        </div>
+    </div>
+    <div class="control-bar">
+        <div>
+            <span style="font-size: 0.75rem; color: var(--text-secondary); margin-right: 8px;">DISTRICT:</span>
+            <select class="select-box" id="districtSelect" onchange="filterDistrict()">
+                <option value="Chennai">Chennai Metro (GCC Zones 01 - 15)</option>
+                <option value="Thiruvallur" disabled>Thiruvallur District (Out of Scope)</option>
+                <option value="Kanchipuram" disabled>Kanchipuram District (Out of Scope)</option>
+            </select>
+        </div>
+        <div class="officer-badge">
+            <span>🛡️</span>
+            <span id="officerDisplay">OFFICER: GCC-OFFICER-2026</span>
+        </div>
+    </div>
+</header>
 
-    function updateOverallStatusStyle(element, status) {
-        if (status.includes("Alert")) element.style.color = 'var(--status-alert)';
-        else if (status.includes("Critical")) element.style.color = 'var(--status-critical)';
-        else element.style.color = 'var(--status-normal)';
+<main>
+    <div class="system-ticker">
+        <div><strong style="color: var(--accent-cyan);">SYSTEM HEALTH:</strong> OPERATIONAL | <span id="activeCount">2 ACTIVE ESP32 NODES DETECTED</span></div>
+        <div id="lastSyncTime">TELEMETRY SYNC: INITIALIZING...</div>
+    </div>
+
+    <div class="grid-container" id="nodesContainer">
+        <!-- Built dynamically via Javascript -->
+    </div>
+</main>
+
+<script>
+    function handleLogin(e) {
+        e.preventDefault();
+        document.getElementById('loginOverlay').style.display = 'none';
+        fetchTelemetry();
     }
 
-    async function fetchData() {
+    async function fetchTelemetry() {
         try {
-            const sysLog = document.getElementById('sysLog');
             const res = await fetch('/api/live');
-            const systemData = await res.json();
-            sysLog.innerText = `Network Status: Operational | Last Sync: ${new Date().toLocaleTimeString()}`;
+            const data = await res.json();
+            
+            document.getElementById('lastSyncTime').innerText = `TELEMETRY SYNC: ${new Date().toLocaleTimeString('en-IN')}`;
+            
+            const container = document.getElementById('nodesContainer');
+            container.innerHTML = '';
 
-            const grid = document.getElementById('mainGrid');
-            grid.innerHTML = '';
+            let activeNodes = 0;
 
-            Object.keys(systemData).forEach(id => {
-                const data = systemData[id];
-                
-                const card = `
-                <div class="drain-card">
-                    <div class="drain-id">${id}</div>
-                    <div class="card-header">
-                        <div class="drain-name">${data.name}</div>
-                        <div class="overall-status" id="status-${id}">${data.status}</div>
-                    </div>
+            Object.keys(data).forEach(id => {
+                const node = data[id];
+                if(node.isActive) activeNodes++;
 
-                    <div class="sensor-row sensor-gas">
-                        <div class="sensor-info">
-                            <span class="icon">${sensorIcons.gas}</span>
-                            <span class="sensor-label">Gas Level (MQ)</span>
+                if (node.isActive) {
+                    // Active ESP32 Node Layout
+                    const cardHTML = `
+                    <div class="node-card">
+                        <div class="node-header">
+                            <div>
+                                <span class="node-code">SCADA TELEMETRY NODE #${id}</span>
+                                <div class="node-title">${node.name}</div>
+                                <div class="node-zone">📍 ${node.zone}</div>
+                            </div>
+                            <span class="status-pill status-${node.status.includes('CRITICAL') ? 'CRITICAL' : node.status.includes('WARN') ? 'WARNING' : 'NORMAL'}">${node.status}</span>
                         </div>
-                        <div class="sensor-value">${data.gasPPM} PPM</div>
-                    </div>
 
-                    <div class="sensor-row sensor-level">
-                        <div class="sensor-info">
-                            <span class="icon">${sensorIcons.level}</span>
-                            <span class="sensor-label">Drain Depth (Ultrasonic)</span>
+                        <div class="metric-grid">
+                            <div class="metric-box">
+                                <div class="metric-label">H₂S / Hazardous Gas Conc.</div>
+                                <div class="metric-value" style="color: #fb923c;">${node.gasPPM} <span class="metric-unit">PPM</span></div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Hydrostatic Depth Level</div>
+                                <div class="metric-value" style="color: #a78bfa;">${node.waterLevelCM} <span class="metric-unit">CM</span></div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Volumetric Discharge Rate</div>
+                                <div class="metric-value" style="color: #4ade80;">${node.flowRateLPM} <span class="metric-unit">L/min</span></div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Pluvial Precipitation</div>
+                                <div class="metric-value" style="color: #2dd4bf;">${node.isRaining ? 'ACTIVE' : 'NONE'}</div>
+                            </div>
                         </div>
-                        <div class="sensor-value">${data.waterLevelCM} CM</div>
-                    </div>
 
-                    <div class="sensor-row sensor-flow">
-                        <div class="sensor-info">
-                            <span class="icon">${sensorIcons.flow}</span>
-                            <span class="sensor-label">Water Flow</span>
+                        <div class="location-footer">
+                            <span>COORDINATES: ${node.lat}, ${node.long}</span>
+                            <span>LAST INGEST: ${node.lastUpdated}</span>
                         </div>
-                        <div class="sensor-value">${data.flowRateLPM} L/m</div>
                     </div>
-
-                    <div class="sensor-row sensor-rain">
-                        <div class="sensor-info">
-                            <span class="icon">${sensorIcons.rain}</span>
-                            <span class="sensor-label">Rain Status</span>
+                    `;
+                    container.innerHTML += cardHTML;
+                } else {
+                    // Empty / Unassigned Standby Node Layout
+                    const cardHTML = `
+                    <div class="node-card offline">
+                        <div class="node-header">
+                            <div>
+                                <span class="node-code" style="color: var(--text-secondary); border-color: var(--panel-border);">NODE #${id} [UNASSIGNED]</span>
+                                <div class="node-title">${node.name}</div>
+                                <div class="node-zone">📍 ${node.zone}</div>
+                            </div>
+                            <span class="status-pill status-OFFLINE">STANDBY</span>
                         </div>
-                        <div class="sensor-value">${data.isRaining ? 'RAINING' : 'CLEAR'}</div>
-                    </div>
 
-                    <div class="updated-time">Sync: ${data.lastUpdated}</div>
-                </div>
-                `;
-                
-                grid.innerHTML += card;
-                
-                setTimeout(() => {
-                  updateOverallStatusStyle(document.getElementById(`status-${id}`), data.status);
-                }, 50);
+                        <div class="standby-msg">
+                            <h4>📡 ESP32 Telemetry Hardware Not Detected</h4>
+                            <p>No active telemetry packet assigned to this sector yet. Field installation required.</p>
+                        </div>
+
+                        <div class="location-footer">
+                            <span>COORDINATES: ${node.lat}, ${node.long}</span>
+                            <span>STATUS: OFFLINE</span>
+                        </div>
+                    </div>
+                    `;
+                    container.innerHTML += cardHTML;
+                }
             });
 
+            document.getElementById('activeCount').innerText = `${activeNodes} ACTIVE ESP32 TELEMETRY NODES INGESTING DATA`;
+
         } catch (err) {
-            console.error("Dashboard Sync Error:", err);
-            document.getElementById('sysLog').innerText = 'Network Error: Cannot reach server.';
+            console.error("SCADA Ingest Error:", err);
         }
     }
 
-    setInterval(fetchData, 2000);
-    fetchData();
+    setInterval(fetchTelemetry, 2500);
 </script>
 
 </body>
