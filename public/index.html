@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chennai Smart Sewage & Drainage System | SCADA Control Center</title>
+    <title>Tirunelveli Smart Sewage & Drainage System | SCADA Control Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -30,7 +30,7 @@
             overflow-x: hidden;
         }
 
-        /* --- AUTHENTICATION OVERLAY --- */
+        /* AUTH OVERLAY */
         #authOverlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -84,7 +84,7 @@
             margin-bottom: 18px; display: none; text-align: left; line-height: 1.4;
         }
 
-        /* --- DASHBOARD HEADER --- */
+        /* HEADER */
         header {
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
@@ -111,7 +111,7 @@
             font-weight: 700; display: flex; align-items: center; gap: 8px;
         }
 
-        /* --- MAIN SYSTEM CONTAINER --- */
+        /* MAIN CONTAINER */
         main { max-width: 1500px; margin: 30px auto; padding: 0 25px; }
 
         .scada-bar {
@@ -199,7 +199,7 @@
 <div id="authOverlay">
     <div class="auth-card">
         <div class="gov-emblem">🏛️</div>
-        <h1>GREATER CHENNAI CORPORATION</h1>
+        <h1>TIRUNELVELI CITY CORPORATION</h1>
         <h2>Smart Sewage & Drainage Monitoring System</h2>
 
         <div id="errorBanner" class="error-banner"></div>
@@ -208,15 +208,15 @@
             <div class="auth-group">
                 <label>Select Administrative Jurisdiction</label>
                 <select id="authCity" required>
-                    <option value="Chennai">Chennai District (Greater Chennai Corporation)</option>
-                    <option value="Coimbatore">Coimbatore District (Out of Scope)</option>
+                    <option value="Tirunelveli">Tirunelveli District (City Corporation)</option>
+                    <option value="Chennai">Chennai District (Out of Scope)</option>
                     <option value="Madurai">Madurai District (Out of Scope)</option>
-                    <option value="Tirunelveli">Tirunelveli District (Out of Scope)</option>
+                    <option value="Coimbatore">Coimbatore District (Out of Scope)</option>
                 </select>
             </div>
             <div class="auth-group">
                 <label>Municipal Officer ID</label>
-                <input type="text" id="authOfficer" placeholder="GCC_ADMIN" required>
+                <input type="text" id="authOfficer" placeholder="TNL_ADMIN" required>
             </div>
             <div class="auth-group">
                 <label>Security Authorization Key</label>
@@ -232,25 +232,24 @@
     <div class="header-title-box">
         <div class="header-emblem">🏛️</div>
         <div>
-            <h1>CHENNAI SMART SEWAGE & DRAINAGE SYSTEM</h1>
-            <p>Greater Chennai Corporation — Municipal SCADA Telemetry Portal</p>
+            <h1>TIRUNELVELI SMART SEWAGE & DRAINAGE SYSTEM</h1>
+            <p>Tirunelveli City Municipal Corporation — SCADA Telemetry Portal</p>
         </div>
     </div>
     <div class="header-controls">
         <div>
             <span style="font-size: 0.75rem; color: var(--text-muted); margin-right: 8px; font-weight: 700;">FILTER ZONE:</span>
             <select class="filter-select" id="zoneFilter" onchange="renderTelemetryGrid()">
-                <option value="ALL">All GCC Zones (Zones 01 - 15)</option>
-                <option value="Zone 05 - Royapuram">Zone 05 - Royapuram</option>
-                <option value="Zone 08 - Anna Nagar">Zone 08 - Anna Nagar</option>
-                <option value="Zone 09 - T. Nagar / Saidapet">Zone 09 - T. Nagar / Saidapet</option>
-                <option value="Zone 10 - Adyar South">Zone 10 - Adyar South</option>
-                <option value="Zone 13 - Velachery">Zone 13 - Velachery</option>
+                <option value="ALL">All Zones (Palayamkottai, Town, Melapalayam, Pettai)</option>
+                <option value="Zone 01 - Palayamkottai">Zone 01 - Palayamkottai</option>
+                <option value="Zone 02 - Town / Junction">Zone 02 - Town / Junction</option>
+                <option value="Zone 03 - Melapalayam">Zone 03 - Melapalayam</option>
+                <option value="Zone 04 - Pettai">Zone 04 - Pettai</option>
             </select>
         </div>
         <div class="officer-badge">
             <span>🛡️</span>
-            <span id="officerDisplay">OFFICER: GCC_ADMIN</span>
+            <span id="officerDisplay">OFFICER: TNL_ADMIN</span>
         </div>
     </div>
 </header>
@@ -269,9 +268,9 @@
 <script>
     let globalTelemetryData = {};
 
-    // Official Login Credentials
-    const OFFICIAL_USER = "GCC_ADMIN";
-    const OFFICIAL_PASS = "GCC_SECURE_2026";
+    // New Tirunelveli Credentials
+    const OFFICIAL_USER = "TNL_ADMIN";
+    const OFFICIAL_PASS = "TNL_SECURE_2026";
 
     async function authenticateSession(e) {
         e.preventDefault();
@@ -283,8 +282,8 @@
 
         errorBanner.style.display = 'none';
 
-        if (city !== "Chennai") {
-            errorBanner.innerText = `ACCESS RESTRICTED: Smart Drainage SCADA monitoring for ${city} is currently out of scope. Operation restricted to Chennai District.`;
+        if (city !== "Tirunelveli") {
+            errorBanner.innerText = `ACCESS RESTRICTED: Smart Drainage SCADA monitoring for ${city} is currently out of scope. Operation restricted to Tirunelveli District.`;
             errorBanner.style.display = 'block';
             return;
         }
@@ -321,7 +320,6 @@
         Object.keys(globalTelemetryData).forEach(id => {
             const node = globalTelemetryData[id];
 
-            // Filter logic
             if (selectedZone !== "ALL" && node.zone !== selectedZone) return;
 
             if (node.isActive) activeCount++;

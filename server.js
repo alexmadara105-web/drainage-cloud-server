@@ -8,13 +8,13 @@ app.use(cors());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Secure Official Municipal Credentials
+// Secure Municipal Credentials for Tirunelveli Smart Drainage Portal
 const MUNICIPAL_CREDENTIALS = {
-  username: "GCC_ADMIN",
-  password: "GCC_SECURE_2026"
+  username: "TNL_ADMIN",
+  password: "TNL_SECURE_2026"
 };
 
-// Initial Municipal Node Registry for Greater Chennai Corporation
+// Initial Municipal Node Registry for Tirunelveli City Municipal Corporation
 const initialNodeState = () => ({
   gasPPM: 0,
   waterLevelCM: 0,
@@ -27,42 +27,42 @@ const initialNodeState = () => ({
 
 let municipalData = {
   "D1": { 
-    name: "Cooum River Arterial Trunk (Culvert 04-A)", 
-    zone: "Zone 08 - Anna Nagar", 
-    lat: "13.0827° N", 
-    long: "80.2707° E", 
+    name: "Thamirabarani River Sub-Basin Outfall", 
+    zone: "Zone 01 - Palayamkottai", 
+    lat: "8.7132° N", 
+    long: "77.7567° E", 
     isActive: true, 
     ...initialNodeState() 
   },
   "D2": { 
-    name: "Buckingham Canal Sub-Basin Outfall", 
-    zone: "Zone 09 - T. Nagar / Saidapet", 
-    lat: "13.0221° N", 
-    long: "80.2311° E", 
+    name: "Tirunelveli Junction Arterial Drain", 
+    zone: "Zone 02 - Town / Junction", 
+    lat: "8.7289° N", 
+    long: "77.7081° E", 
     isActive: true, 
     ...initialNodeState() 
   },
   "D3": { 
-    name: "Velachery Lake Flood Overflow Conduit", 
-    zone: "Zone 13 - Velachery", 
-    lat: "12.9815° N", 
-    long: "80.2180° E", 
+    name: "Melapalayam Canal Overflow Channel", 
+    zone: "Zone 03 - Melapalayam", 
+    lat: "8.7011° N", 
+    long: "77.7250° E", 
     isActive: false, 
     ...initialNodeState() 
   },
   "D4": { 
-    name: "Adyar River Basin Collector", 
-    zone: "Zone 10 - Adyar South", 
-    lat: "13.0067° N", 
-    long: "80.2571° E", 
+    name: "Tirunelveli West Collector Drain", 
+    zone: "Zone 04 - Pettai", 
+    lat: "8.7420° N", 
+    long: "77.6852° E", 
     isActive: false, 
     ...initialNodeState() 
   },
   "D5": { 
-    name: "Royapuram Coastal Storm Drain Outfall", 
-    zone: "Zone 05 - Royapuram", 
-    lat: "13.1137° N", 
-    long: "80.2954° E", 
+    name: "Vannarpettai Storm Outfall Conduit", 
+    zone: "Zone 01 - Vannarpettai", 
+    lat: "8.7215° N", 
+    long: "77.7310° E", 
     isActive: false, 
     ...initialNodeState() 
   }
@@ -72,10 +72,10 @@ let municipalData = {
 app.post('/api/login', (req, res) => {
   const { username, password, city } = req.body;
 
-  if (city !== "Chennai") {
+  if (city !== "Tirunelveli") {
     return res.status(403).json({ 
       success: false, 
-      message: `SCADA Monitoring for ${city} is currently out of scope. Operation restricted to Chennai Metropolitan Region.` 
+      message: `SCADA Monitoring for ${city} is currently out of scope. Operation restricted to Tirunelveli Corporation.` 
     });
   }
 
@@ -86,7 +86,7 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// Telemetry Data Ingest Endpoint from ESP32
+// Telemetry Ingest Endpoint from ESP32
 app.post('/api/update', (req, res) => {
   const { drainageId, gas, level, flow, rain } = req.body;
 
@@ -112,10 +112,10 @@ app.post('/api/update', (req, res) => {
   res.json({ success: true, message: `Telemetry ingested for Node ${drainageId}.` });
 });
 
-// Fetch Live Telemetry Data Endpoint
+// Fetch Live Telemetry Endpoint
 app.get('/api/live', (req, res) => {
   res.json(municipalData);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🏛️ Chennai Smart Sewage SCADA Operational on Port ${PORT}`));
+app.listen(PORT, () => console.log(`🏛️ Tirunelveli Smart Sewage SCADA Operational on Port ${PORT}`));
