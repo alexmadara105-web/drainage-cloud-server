@@ -6,6 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Serve static frontend files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Secure Municipal Credentials for Tirunelveli Smart Drainage Portal
@@ -14,7 +15,7 @@ const MUNICIPAL_CREDENTIALS = {
   password: "TNL_SECURE_2026"
 };
 
-// Initial Municipal Node Registry for Tirunelveli City Municipal Corporation
+// Default Telemetry Node Template
 const initialNodeState = () => ({
   gasPPM: 0,
   waterLevelCM: 0,
@@ -25,6 +26,7 @@ const initialNodeState = () => ({
   isActive: false
 });
 
+// Municipal Node Registry for Tirunelveli City Municipal Corporation
 let municipalData = {
   "D1": { 
     name: "Thamirabarani River Sub-Basin Outfall", 
@@ -68,14 +70,14 @@ let municipalData = {
   }
 };
 
-// Authentication Endpoint
+// 1. Municipal Authentication Endpoint
 app.post('/api/login', (req, res) => {
   const { username, password, city } = req.body;
 
   if (city !== "Tirunelveli") {
     return res.status(403).json({ 
       success: false, 
-      message: `SCADA Monitoring for ${city} is currently out of scope. Operation restricted to Tirunelveli Corporation.` 
+      message: `SCADA Monitoring for ${city} is currently out of scope. Operation restricted to Tirunelveli City Corporation.` 
     });
   }
 
@@ -86,7 +88,7 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// Telemetry Ingest Endpoint from ESP32
+// 2. Hardware Telemetry Ingest Endpoint (from ESP32)
 app.post('/api/update', (req, res) => {
   const { drainageId, gas, level, flow, rain } = req.body;
 
@@ -94,10 +96,12 @@ app.post('/api/update', (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid SCADA Node Identification." });
   }
 
+  // Threat Classification Engine
   let status = "NORMAL";
-  if (gas > 250 || level > 25) status = "WARNING";
-  if (gas > 550 || level > 45) status = "CRITICAL ALARM";
+  if (level > 25) status = "WARNING";
+  if (level > 45 || gas > 550) status = "CRITICAL ALARM";
 
+  // Update telemetry record
   municipalData[drainageId] = {
     ...municipalData[drainageId],
     gasPPM: gas ?? municipalData[drainageId].gasPPM,
@@ -112,10 +116,11 @@ app.post('/api/update', (req, res) => {
   res.json({ success: true, message: `Telemetry ingested for Node ${drainageId}.` });
 });
 
-// Fetch Live Telemetry Endpoint
+// 3. Live Telemetry Fetch Endpoint (for Frontend Dashboard)
 app.get('/api/live', (req, res) => {
   res.json(municipalData);
 });
 
+// Start Express Application
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🏛️ Tirunelveli Smart Sewage SCADA Operational on Port ${PORT}`));
