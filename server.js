@@ -96,10 +96,18 @@ app.post('/api/update', (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid SCADA Node Identification." });
   }
 
-  // Threat Classification Engine
+  // Calibrated Threat Classification Engine:
+  // NORMAL: Gas < 350 PPM AND Water Level <= 25 cm
+  // WARNING: Gas 350 - 649 PPM OR Water Level 26 - 45 cm
+  // CRITICAL ALARM: Gas >= 650 PPM OR Water Level > 45 cm
   let status = "NORMAL";
-  if (level > 25) status = "WARNING";
-  if (level > 45 || gas > 550) status = "CRITICAL ALARM";
+  
+  if (gas >= 350 || level > 25) {
+    status = "WARNING";
+  }
+  if (gas >= 650 || level > 45) {
+    status = "CRITICAL ALARM";
+  }
 
   // Update telemetry record
   municipalData[drainageId] = {
