@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Serve static frontend files from the 'public' directory
+// Serve static frontend files from 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Secure Municipal Credentials for Tirunelveli Smart Drainage Portal
@@ -96,16 +96,17 @@ app.post('/api/update', (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid SCADA Node Identification." });
   }
 
-  // Calibrated Threat Classification Engine:
-  // NORMAL: Gas < 350 PPM AND Water Level <= 25 cm
-  // WARNING: Gas 350 - 649 PPM OR Water Level 26 - 45 cm
-  // CRITICAL ALARM: Gas >= 650 PPM OR Water Level > 45 cm
+  // EXACT THRESHOLD LOGIC:
+  // NORMAL: Gas <= 350 PPM AND Water Level <= 20.0 cm
+  // WARNING: Gas 351 - 550 PPM OR Water Level 20.1 - 35.0 cm
+  // CRITICAL ALARM: Gas > 550 PPM OR Water Level > 35.0 cm
   let status = "NORMAL";
-  
-  if (gas >= 350 || level > 25) {
+
+  if (gas > 350 || level > 20.0) {
     status = "WARNING";
   }
-  if (gas >= 650 || level > 45) {
+
+  if (gas > 550 || level > 35.0) {
     status = "CRITICAL ALARM";
   }
 
@@ -121,7 +122,7 @@ app.post('/api/update', (req, res) => {
     isActive: true
   };
 
-  res.json({ success: true, message: `Telemetry ingested for Node ${drainageId}.` });
+  res.json({ success: true, message: `Telemetry ingested for Node ${drainageId}. State: ${status}` });
 });
 
 // 3. Live Telemetry Fetch Endpoint (for Frontend Dashboard)
